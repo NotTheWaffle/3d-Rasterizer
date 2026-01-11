@@ -16,10 +16,9 @@ public class Game3d extends Game{
 	public final double speed = .02;
 	public final double rotSpeed = .03;
 
-	private Mat4 cam;
+	private Transform cam;
 
 	Triangle[] triangles;
-	Line[] lines;
 	
 	int cx = width / 2;
 	int cy = height / 2;
@@ -27,8 +26,11 @@ public class Game3d extends Game{
 	public Game3d(int width, int height, double fov, String model){
 		super(width, height);
 		triangles = loadObj("Models/"+model+".obj");
-		cam = Mat4.multiply(Transform.rotationZ(Math.PI), Transform.translation(0, 0, -3));
-		lines = new Line[] {new Line(null, null)};
+		if (triangles == null){
+			System.exit(1);
+		}
+		cam = new Transform();
+		
 		this.focalLength = (double) height / (2 * Math.tan(fov/2));
 		zBuffer = new double[width][height];
 	}
@@ -39,19 +41,20 @@ public class Game3d extends Game{
 	}
 	@Override
 	public void tick(){
-		if (input.keys['W']) 				cam = Mat4.multiply(Transform.translation(0, 0,  speed), cam);
-		if (input.keys['A']) 				cam = Mat4.multiply(Transform.translation(-speed, 0, 0), cam);
-		if (input.keys['S']) 				cam = Mat4.multiply(Transform.translation(0, 0, -speed), cam);
-		if (input.keys['D']) 				cam = Mat4.multiply(Transform.translation( speed, 0, 0), cam);
-		if (input.keys[' ']) 				cam = Mat4.multiply(Transform.translation(0,  speed, 0), cam);
-		if (input.keys[Input.SHIFT]) 		cam = Mat4.multiply(Transform.translation(0, -speed, 0), cam);
+		
+		if (input.keys['W']) 				cam.translate(0, 0, -speed);
+		if (input.keys['A']) 				cam.translate(speed, 0, 0);
+		if (input.keys['S']) 				cam.translate(0, 0, speed);
+		if (input.keys['D']) 				cam.translate(-speed, 0, 0);
+		if (input.keys[' ']) 				cam.translate(0, -speed, 0);
+		if (input.keys[Input.SHIFT]) 		cam.translate(0, speed, 0);
 	
-		if (input.keys[Input.UP_ARROW]) 	cam = Mat4.multiply(Transform.rotationX( rotSpeed), cam);
-		if (input.keys[Input.DOWN_ARROW]) 	cam = Mat4.multiply(Transform.rotationX(-rotSpeed), cam);
-		if (input.keys[Input.LEFT_ARROW]) 	cam = Mat4.multiply(Transform.rotationY( rotSpeed), cam);
-		if (input.keys[Input.RIGHT_ARROW]) 	cam = Mat4.multiply(Transform.rotationY(-rotSpeed), cam);
-		if (input.keys['Q']) 				cam = Mat4.multiply(Transform.rotationZ(-rotSpeed), cam);
-		if (input.keys['E']) 				cam = Mat4.multiply(Transform.rotationZ( rotSpeed), cam);
+		if (input.keys[Input.UP_ARROW]) 	cam.rotateX( rotSpeed);
+		if (input.keys[Input.DOWN_ARROW]) 	cam.rotateX(-rotSpeed);
+		if (input.keys[Input.LEFT_ARROW]) 	cam.rotateY( rotSpeed);
+		if (input.keys[Input.RIGHT_ARROW]) 	cam.rotateY(-rotSpeed);
+		if (input.keys['Q']) 				cam.rotateZ(-rotSpeed);
+		if (input.keys['E']) 				cam.rotateZ( rotSpeed);
 	}
 
 	public double getX(double x, double y, double z) {
@@ -73,29 +76,61 @@ public class Game3d extends Game{
 		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		WritableRaster raster = image.getRaster();
 
-
-		
-
 		clearZBuffer();
 		for (Triangle triangle : triangles){
 			triangle.render(raster, focalLength, cx, cy, zBuffer, cam);
 		}
+
+
+		//Vec3 p = cam.translation.add(cam.getForwardVec3().scale(-Math.pow(2,input.mouseWheel)));
+		//
+		//p = cam.applyTo(p);
+		//
+		Vec3 origin = cam.translation;
+		Vec3 vector = cam.getForwardVector().scale(-1);
+		Vec3 p = null;
+		for (Triangle t : triangles){
+			p = t.getIntersection(vector, origin);
+			if (p != null){
+				break;
+			}
+		}
+		
+		if (p != null){
+			p = cam.applyTo(p);
+			Point point = new Point(p, .05);
+			point.render(raster, focalLength, cx, cy, zBuffer, cam);
+			g2d.drawString(p.toString(), 0, 60);
+		}
+		
+
+
+
+
 		g2d.drawImage(image, 0, 0, null);
+
+		
+
+
+		g2d.drawString(cam.translation.toString(), 0, 80);
+
+		
 
 
 		long renderTime = System.nanoTime()-renderStart;
 		g2d.drawString("Time (ms):"+renderTime/1_000_000.0,0,20);
+		g2d.drawString(cam.getForwardVector().toString(), 0, 40);
 	}
 
 	public static Triangle[] loadObj(String filename){
-		List<Vec4> points = new ArrayList<>();
+		List<Vec3> points = new ArrayList<>();
 		List<Triangle> triangles = new ArrayList<>();
 		double minX, minY, minZ, maxX, maxY, maxZ;
 		minX = minY = minZ = Double.POSITIVE_INFINITY;
 		maxX = maxY = maxZ = Double.NEGATIVE_INFINITY;
 		
 		try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-			List<Vec4> pointBuffer = new ArrayList<>();
+			List<Vec3> pointBuffer = new ArrayList<>();
 			for (String line = reader.readLine(); line != null; line = reader.readLine()){
 				if (line.length() == 0) continue;
 				if (line.charAt(0) == '#') continue;
@@ -105,7 +140,7 @@ public class Game3d extends Game{
 						continue;
 					}
 					String[] rawValues = line.split(" ");
-					Vec4 point = new Vec4(Double.parseDouble(rawValues[1]),Double.parseDouble(rawValues[2]),Double.parseDouble(rawValues[3]),1);
+					Vec3 point = new Vec3(Double.parseDouble(rawValues[1]),Double.parseDouble(rawValues[2]),Double.parseDouble(rawValues[3]));
 					if (point.x > maxX) maxX = point.x;
 					if (point.x < minX) minX = point.x;
 					
@@ -125,7 +160,7 @@ public class Game3d extends Game{
 						pointBuffer.add(points.get(index-1));
 					}
 					while (pointBuffer.size()>2){
-						triangles.add(new Triangle(0, 1, 2, pointBuffer.toArray(Vec4[]::new)));
+						triangles.add(new Triangle(0, 1, 2, pointBuffer.toArray(Vec3[]::new)));
 						pointBuffer.remove(1);
 					}
 				}
@@ -148,7 +183,7 @@ public class Game3d extends Game{
 		yrange *= scale;
 		zrange *= scale;
 
-		for (Vec4 point : points){
+		for (Vec3 point : points){
 			point.x = (point.x - minX)*scale-xrange/2;
 			point.y = (point.y - minY)*scale-yrange/2;
 			point.z = (point.z - minZ)*scale-zrange/2;

@@ -1,29 +1,28 @@
 
 import java.awt.Color;
-import java.awt.image.WritableRaster;
 
 public class Triangle {
-	public final Vec4 p1;
-	public final Vec4 p2;
-	public final Vec4 p3;
+	public final Vec3 p1;
+	public final Vec3 p2;
+	public final Vec3 p3;
 	public final Color color;
 
-	public Triangle(Vec4 p1, Vec4 p2, Vec4 p3){
+	public Triangle(Vec3 p1, Vec3 p2, Vec3 p3){
 		this.p1 = p1;
 		this.p2 = p2;
 		this.p3 = p3;
 		this.color = new Color((int)(Math.random()*16777216));
 	}
-	public Triangle(int i1, int i2, int i3, Vec4[] points){
+	public Triangle(int i1, int i2, int i3, Vec3[] points){
 		this.p1 = points[i1];
 		this.p2 = points[i2];
 		this.p3 = points[i3];
 		this.color = new Color((int)(Math.random()*16777216));
 	}
-	public void render(WritableRaster raster, double focalLength, int cx, int cy, double[][] zBuffer, Mat4 cam) {
-		Vec4 p1 = cam.transform(this.p1);
-		Vec4 p2 = cam.transform(this.p2);
-		Vec4 p3 = cam.transform(this.p3);
+	public void render(java.awt.image.WritableRaster raster, double focalLength, int cx, int cy, double[][] zBuffer, Transform cam) {
+		Vec3 p1 = cam.applyTo(this.p1);
+		Vec3 p2 = cam.applyTo(this.p2);
+		Vec3 p3 = cam.applyTo(this.p3);
 		
 		if (p1.z > 0 || p2.z > 0 || p3.z > 0) return;
 
@@ -84,22 +83,15 @@ public class Triangle {
 	private static double edge(int x1, int y1, int x2, int y2, int x, int y) {
 		return (x - x1) * (y2 - y1) - (y - y1) * (x2 - x1);
 	}
-	public Vec3 getIntersection(Ray ray){
-		Vec3 v0 = p1.toVec3();
-		Vec3 v1 = p2.toVec3();
-		Vec3 v2 = p3.toVec3();
+	public Vec3 getIntersection(Vec3 rayVector, Vec3 rayOrigin){
 
 		final double EPSILON = 1e-8;
 
+		Vec3 edge1 = p2.sub(p1);
+		Vec3 edge2 = p3.sub(p1);
 
-		Vec3 rayOrigin = new Vec3(ray.x, ray.y, ray.z);
-		Vec3 rayVector = new Vec3(ray.dx, ray.dy, ray.dz);
-
-		Vec3 edge1 = Vec3.sub(v1, v0);
-		Vec3 edge2 = Vec3.sub(v2, v0);
-
-		Vec3 pvec = Vec3.cross(rayVector, edge2);
-		double det = Vec3.dot(edge1, pvec);
+		Vec3 pvec = rayVector.cross(edge2);
+		double det = edge1.dot(pvec);
 
 		if (Math.abs(det) < EPSILON) {
 			return null;
@@ -107,24 +99,24 @@ public class Triangle {
 
 		double invDet = 1.0 / det;
 
-		Vec3 tvec = Vec3.sub(rayOrigin, v0);
-		double u = Vec3.dot(tvec, pvec) * invDet;
+		Vec3 tvec = rayOrigin.sub(p1);
+		double u = tvec.dot(pvec) * invDet;
 		if (u < 0.0 || u > 1.0) {
 			return null;
 		}
 
-		Vec3 qvec = Vec3.cross(tvec, edge1);
-		double v = Vec3.dot(rayVector, qvec) * invDet;
+		Vec3 qvec = tvec.cross(edge1);
+		double v = rayVector.dot(qvec) * invDet;
 		if (v < 0.0 || u + v > 1.0) {
 			return null;
 		}
 
-		double t = Vec3.dot(edge2, qvec) * invDet;
+		double t = edge2.dot(qvec) * invDet;
 		if (t < 0.0) {
 			return null;
 		}
 
-		return Vec3.add(rayOrigin, Vec3.mult(rayVector, t));
+		return rayOrigin.add(rayVector.scale(t));
 	}
 	@Override
 	public int hashCode(){

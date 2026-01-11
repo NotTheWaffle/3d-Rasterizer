@@ -4,7 +4,7 @@ import java.util.concurrent.locks.LockSupport;
 
 public class Main {
 	public static void main(String[] args){
-		runGame(new Game3d(820,512, Math.PI/2, "cube"), 60);
+		runGame(new Game3d(820,512, Math.PI/2, "teapot"), 60);
 	}
 	public static void runGame(final Game game, final double fps){
 		final Window window = new Window(game);

@@ -6,55 +6,49 @@ public class Vec3 {
 		this.y = y;
 		this.z = z;
 	}
-	public void normalize(){
+
+	public Vec3 normalize(){
 		double r = Math.sqrt(x*x + y*y+ z*z);
-		x /= r;
-		y /= r;
-		z /= r;
-	}
-	public static Vec3 normalize(Vec3 v){
-		double r = Math.sqrt(v.x*v.x + v.y*v.y+ v.z*v.z);
 		return new Vec3(
-			v.x/r,
-			v.y/r,
-			v.z/r
+			x/r,
+			y/r,
+			z/r
 		);
 	}
-	public void add(Vec3 v){
-		x += v.x;
-		y += v.y;
-		z += v.z;
-	}
-	public static Vec3 add(Vec3 v1, Vec3 v2){
-		return new Vec3(v1.x+v2.x, v1.y+v2.y, v1.z+v2.z);
-	}
-	public void sub(Vec3 v){
-		x -= v.x;
-		y -= v.y;
-		z -= v.z;
-	}
-	public static Vec3 sub(Vec3 v1, Vec3 v2){
-		return new Vec3(v1.x-v2.x, v1.y-v2.y, v1.z-v2.z);
-	}
-	public void mult(double m){
-		x *= m;
-		y *= m;
-		z *= m;
-	}
-	public static Vec3 mult(Vec3 v, double m){
-		return new Vec3(v.x * m, v.y * m, v.z * m);
-	}
-	public static double dot(Vec3 v1, Vec3 v2) {
-		return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-	}
-	public static Vec3 cross(Vec3 v1, Vec3 v2){
+
+	public Vec3 add(Vec3 v){
 		return new Vec3(
-			v1.y * v2.z - v1.z * v2.y,
-			v1.z * v2.x - v1.x * v2.z,
-			v1.x * v2.y - v1.y * v2.x
+			x + v.x,
+			y + v.y,
+			z + v.z
 		);
 	}
-	public Vec4 toVec4(double w){
-		return new Vec4(x, y, z, w);
+	public Vec3 sub(Vec3 v){
+		return new Vec3(
+			x - v.x,
+			y - v.y,
+			z - v.z
+		);
+	}
+	public Vec3 scale(double m){
+		return new Vec3(
+			x * m,
+			y * m,
+			z * m
+		);
+	}
+	public double dot(Vec3 v){
+		return x * v.x + y * v.y + z * v.z;
+	}
+	public Vec3 cross(Vec3 v){
+		return new Vec3(
+			y * v.z - z * v.y,
+			z * v.x - x * v.z,
+			x * v.y - y * v.x
+		);
+	}
+	@Override
+	public String toString(){
+		return String.format("(%3.2f, %3.2f, %3.2f)", x, y, z);
 	}
 }
