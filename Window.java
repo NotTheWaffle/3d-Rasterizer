@@ -8,12 +8,10 @@ public class Window {
 	public final long start;
 
 	private final GamePanel gamePanel;
-	private final Game game;
 	private final Input input;
 
 	public Window(Game game){
 		start = System.currentTimeMillis();
-		this.game = game;
 		this.input = game.input;
 		int width  = 8  + game.width  + 8;
 		int height = 31 + game.height + 8;

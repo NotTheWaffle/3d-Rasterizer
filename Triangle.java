@@ -84,6 +84,48 @@ public class Triangle {
 	private static double edge(int x1, int y1, int x2, int y2, int x, int y) {
 		return (x - x1) * (y2 - y1) - (y - y1) * (x2 - x1);
 	}
+	public Vec3 getIntersection(Ray ray){
+		Vec3 v0 = p1.toVec3();
+		Vec3 v1 = p2.toVec3();
+		Vec3 v2 = p3.toVec3();
+
+		final double EPSILON = 1e-8;
+
+
+		Vec3 rayOrigin = new Vec3(ray.x, ray.y, ray.z);
+		Vec3 rayVector = new Vec3(ray.dx, ray.dy, ray.dz);
+
+		Vec3 edge1 = Vec3.sub(v1, v0);
+		Vec3 edge2 = Vec3.sub(v2, v0);
+
+		Vec3 pvec = Vec3.cross(rayVector, edge2);
+		double det = Vec3.dot(edge1, pvec);
+
+		if (Math.abs(det) < EPSILON) {
+			return null;
+		}
+
+		double invDet = 1.0 / det;
+
+		Vec3 tvec = Vec3.sub(rayOrigin, v0);
+		double u = Vec3.dot(tvec, pvec) * invDet;
+		if (u < 0.0 || u > 1.0) {
+			return null;
+		}
+
+		Vec3 qvec = Vec3.cross(tvec, edge1);
+		double v = Vec3.dot(rayVector, qvec) * invDet;
+		if (v < 0.0 || u + v > 1.0) {
+			return null;
+		}
+
+		double t = Vec3.dot(edge2, qvec) * invDet;
+		if (t < 0.0) {
+			return null;
+		}
+
+		return Vec3.add(rayOrigin, Vec3.mult(rayVector, t));
+	}
 	@Override
 	public int hashCode(){
 		return p1.hashCode() ^ p2.hashCode() ^ p3.hashCode();

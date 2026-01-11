@@ -19,6 +19,7 @@ public class Game3d extends Game{
 	private Mat4 cam;
 
 	Triangle[] triangles;
+	Line[] lines;
 	
 	int cx = width / 2;
 	int cy = height / 2;
@@ -27,6 +28,7 @@ public class Game3d extends Game{
 		super(width, height);
 		triangles = loadObj("Models/"+model+".obj");
 		cam = Mat4.multiply(Transform.rotationZ(Math.PI), Transform.translation(0, 0, -3));
+		lines = new Line[] {new Line(null, null)};
 		this.focalLength = (double) height / (2 * Math.tan(fov/2));
 		zBuffer = new double[width][height];
 	}
@@ -37,19 +39,19 @@ public class Game3d extends Game{
 	}
 	@Override
 	public void tick(){
-		if (input.keys['W']) 			cam = Mat4.multiply(Transform.translation(0, 0,  speed), cam);
-		if (input.keys['A']) 			cam = Mat4.multiply(Transform.translation(-speed, 0, 0), cam);
-		if (input.keys['S']) 			cam = Mat4.multiply(Transform.translation(0, 0, -speed), cam);
-		if (input.keys['D']) 			cam = Mat4.multiply(Transform.translation( speed, 0, 0), cam);
-		if (input.keys[' ']) 			cam = Mat4.multiply(Transform.translation(0,  speed, 0), cam);
-		if (input.keys[Input.SHIFT]) 	cam = Mat4.multiply(Transform.translation(0, -speed, 0), cam);
+		if (input.keys['W']) 				cam = Mat4.multiply(Transform.translation(0, 0,  speed), cam);
+		if (input.keys['A']) 				cam = Mat4.multiply(Transform.translation(-speed, 0, 0), cam);
+		if (input.keys['S']) 				cam = Mat4.multiply(Transform.translation(0, 0, -speed), cam);
+		if (input.keys['D']) 				cam = Mat4.multiply(Transform.translation( speed, 0, 0), cam);
+		if (input.keys[' ']) 				cam = Mat4.multiply(Transform.translation(0,  speed, 0), cam);
+		if (input.keys[Input.SHIFT]) 		cam = Mat4.multiply(Transform.translation(0, -speed, 0), cam);
 	
-		if (input.keys[Input.UP_ARROW]) 	cam = Mat4.multiply(Transform.rotationX(rotSpeed), cam);
+		if (input.keys[Input.UP_ARROW]) 	cam = Mat4.multiply(Transform.rotationX( rotSpeed), cam);
 		if (input.keys[Input.DOWN_ARROW]) 	cam = Mat4.multiply(Transform.rotationX(-rotSpeed), cam);
-		if (input.keys[Input.LEFT_ARROW]) 	cam = Mat4.multiply(Transform.rotationY(rotSpeed), cam);
+		if (input.keys[Input.LEFT_ARROW]) 	cam = Mat4.multiply(Transform.rotationY( rotSpeed), cam);
 		if (input.keys[Input.RIGHT_ARROW]) 	cam = Mat4.multiply(Transform.rotationY(-rotSpeed), cam);
 		if (input.keys['Q']) 				cam = Mat4.multiply(Transform.rotationZ(-rotSpeed), cam);
-		if (input.keys['E']) 				cam = Mat4.multiply(Transform.rotationZ(rotSpeed), cam);
+		if (input.keys['E']) 				cam = Mat4.multiply(Transform.rotationZ( rotSpeed), cam);
 	}
 
 	public double getX(double x, double y, double z) {
@@ -71,19 +73,18 @@ public class Game3d extends Game{
 		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		WritableRaster raster = image.getRaster();
 
+
+		
+
 		clearZBuffer();
 		for (Triangle triangle : triangles){
 			triangle.render(raster, focalLength, cx, cy, zBuffer, cam);
 		}
-
 		g2d.drawImage(image, 0, 0, null);
+
+
 		long renderTime = System.nanoTime()-renderStart;
-		g2d.drawString("Time (ms):"+renderTime/1_000_000.0,0,100);
-		for (int x = 0; x < 4; x++){
-			for (int y = 0; y < 4; y++){
-				g2d.drawString((int) (100*cam.m[y][x])/100.0+" ",x*40,y*20+20);
-			}
-		}
+		g2d.drawString("Time (ms):"+renderTime/1_000_000.0,0,20);
 	}
 
 	public static Triangle[] loadObj(String filename){
@@ -100,7 +101,7 @@ public class Game3d extends Game{
 				if (line.charAt(0) == '#') continue;
 				char type = line.charAt(0);
 				if (type == 'v'){
-					if (line.charAt(1) == 'n'){
+					if (line.charAt(1) == 'n' || line.charAt(1) == 't'){
 						continue;
 					}
 					String[] rawValues = line.split(" ");

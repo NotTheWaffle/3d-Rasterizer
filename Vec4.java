@@ -7,4 +7,7 @@ public class Vec4 {
 		this.z = z;
 		this.w = w;
 	}
+	public Vec3 toVec3(){
+		return new Vec3(x*w, y*w, z*w);
+	}
 }
