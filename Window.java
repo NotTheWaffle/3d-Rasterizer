@@ -51,6 +51,7 @@ public class Window {
 			}
 		});
 
+
 		gamePanel.requestFocus();
 	}
 

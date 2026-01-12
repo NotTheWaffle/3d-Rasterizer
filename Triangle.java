@@ -1,23 +1,40 @@
 
 import java.awt.Color;
 
-public class Triangle {
+public final class Triangle {
 	public final Vec3 p1;
 	public final Vec3 p2;
 	public final Vec3 p3;
-	public final Color color;
+	public Color color;
+	public final Color trueColor;
 
 	public Triangle(Vec3 p1, Vec3 p2, Vec3 p3){
 		this.p1 = p1;
 		this.p2 = p2;
 		this.p3 = p3;
-		this.color = new Color((int)(Math.random()*16777216));
+		this.trueColor = new Color((int)(Math.random()*16777216));
+		recolor(new Vec3(0, 1, 0));
 	}
-	public Triangle(int i1, int i2, int i3, Vec3[] points){
+	public void recolor(Vec3 light){
+		double coeff = light.dot(normal());
+		if (coeff < 0.3) coeff = .3;
+		this.color = new Color(
+			(int) (trueColor.getRed() * coeff),
+			(int) (trueColor.getGreen() * coeff),
+			(int) (trueColor.getBlue() * coeff)
+		);
+	}
+	public Triangle(int i1, int i2, int i3, Vec3[] points, Vec3 light){
 		this.p1 = points[i1];
 		this.p2 = points[i2];
 		this.p3 = points[i3];
-		this.color = new Color((int)(Math.random()*16777216));
+		trueColor = new Color((int)(Math.random()*16777216));
+		recolor(light);
+	}
+	public Vec3 normal() {
+		Vec3 edge1 = p2.sub(p1);
+		Vec3 edge2 = p3.sub(p1);
+		return edge1.cross(edge2).normalize();
 	}
 	public void render(java.awt.image.WritableRaster raster, double focalLength, int cx, int cy, double[][] zBuffer, Transform cam) {
 		Vec3 p1 = cam.applyTo(this.p1);
@@ -73,8 +90,10 @@ public class Triangle {
 					double iz = w1 * iz1 + w2 * iz2 + w3 * iz3;
 
 					if (iz < zBuffer[x][y]) {
+						
 						zBuffer[x][y] = iz;
 						raster.setPixel(x, y, rgb);
+						//raster.setPixel(x, y, new int[] {(int) (100/iz),(int) (100/iz),(int) (100/iz),255});
 					}
 				}
 			}

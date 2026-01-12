@@ -14,14 +14,16 @@ public class Point {
 		Vec3 p = cam.applyTo(this.point);
 		if (p.z >= 0) return;
 		
-		int x1 = (int)( focalLength * p.x / p.z) + cx;
-		int y1 = (int)(-focalLength * p.y / p.z) + cy;
+		int screenX = (int)( focalLength * p.x / p.z) + cx;
+		int screenY = (int)(-focalLength * p.y / p.z) + cy;
 
-		int minX = Math.max(0, x1);
-		int maxX = Math.min(zBuffer.length - 1, x1);
-		int minY = Math.max(0, y1);
-		int maxY = Math.min(zBuffer[0].length - 1, y1);
 
+		int radius = (int) (focalLength * (this.radius / -p.z));
+
+		int minX = Math.max(0, screenX-radius);
+		int maxX = Math.min(zBuffer.length - 1, screenX+radius);
+		int minY = Math.max(0, screenY-radius);
+		int maxY = Math.min(zBuffer[0].length - 1, screenY+radius);
 		int[] rgb = {
 			color.getRed(),
 			color.getGreen(),
@@ -31,14 +33,15 @@ public class Point {
 
 		for (int y = minY; y <= maxY; y++) {
 			for (int x = minX; x <= maxX; x++) {
-
-				if (x * x + y * y < radius * radius) {
+				int dx = x-screenX;
+				int dy = y-screenY;
+				if (dx * dx + dy * dy < radius * radius) {
 					double iz = p.z;
 
-
-					if (true || iz < zBuffer[x][y]) {
+					if (iz < zBuffer[x][y]) {
 						zBuffer[x][y] = iz;
 						raster.setPixel(x, y, rgb);
+						//raster.setPixel(x, y, new int[] {(int) (100/iz),(int) (100/iz),(int) (100/iz), 255});
 					}
 				}
 			}

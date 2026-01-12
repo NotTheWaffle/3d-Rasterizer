@@ -16,6 +16,8 @@ public class Game3d extends Game{
 	public final double speed = .02;
 	public final double rotSpeed = .03;
 
+	private final Vec3 light;
+
 	private Transform cam;
 
 	Triangle[] triangles;
@@ -25,11 +27,14 @@ public class Game3d extends Game{
 
 	public Game3d(int width, int height, double fov, String model){
 		super(width, height);
-		triangles = loadObj("Models/"+model+".obj");
+		this.light = new Vec3(0, -1, 1);
+		triangles = loadObj("Models/"+model+".obj", light);
 		if (triangles == null){
 			System.exit(1);
 		}
 		cam = new Transform();
+		cam.rotateZ(Math.PI);
+		cam.translate(0, 0, 1);
 		
 		this.focalLength = (double) height / (2 * Math.tan(fov/2));
 		zBuffer = new double[width][height];
@@ -55,6 +60,9 @@ public class Game3d extends Game{
 		if (input.keys[Input.RIGHT_ARROW]) 	cam.rotateY(-rotSpeed);
 		if (input.keys['Q']) 				cam.rotateZ(-rotSpeed);
 		if (input.keys['E']) 				cam.rotateZ( rotSpeed);
+		for (Triangle t : triangles){
+			t.recolor(cam.getForwardVector().normalize());
+		}
 	}
 
 	public double getX(double x, double y, double z) {
@@ -81,26 +89,21 @@ public class Game3d extends Game{
 			triangle.render(raster, focalLength, cx, cy, zBuffer, cam);
 		}
 
-
-		//Vec3 p = cam.translation.add(cam.getForwardVec3().scale(-Math.pow(2,input.mouseWheel)));
-		//
-		//p = cam.applyTo(p);
-		//
+		
 		Vec3 origin = cam.translation;
 		Vec3 vector = cam.getForwardVector().scale(-1);
 		Vec3 p = null;
 		for (Triangle t : triangles){
-			p = t.getIntersection(vector, origin);
-			if (p != null){
-				break;
+			Vec3 p2 = t.getIntersection(vector, origin);
+			if (p2 == null) continue;
+			if (p == null || p.dist(origin) > p2.dist(origin)){
+				p = p2;
 			}
 		}
-		
+		p = light;
 		if (p != null){
-			p = cam.applyTo(p);
-			Point point = new Point(p, .05);
-			point.render(raster, focalLength, cx, cy, zBuffer, cam);
-			g2d.drawString(p.toString(), 0, 60);
+			Point point = new Point(p, .1);
+	//		System.out.println(cam.applyTo(p));
 		}
 		
 
@@ -114,6 +117,7 @@ public class Game3d extends Game{
 
 		g2d.drawString(cam.translation.toString(), 0, 80);
 
+			g2d.drawString(p.toString(), 0, 60);
 		
 
 
@@ -122,7 +126,8 @@ public class Game3d extends Game{
 		g2d.drawString(cam.getForwardVector().toString(), 0, 40);
 	}
 
-	public static Triangle[] loadObj(String filename){
+	public static Triangle[] loadObj(String filename, Vec3 light){
+		light = light.normalize();
 		List<Vec3> points = new ArrayList<>();
 		List<Triangle> triangles = new ArrayList<>();
 		double minX, minY, minZ, maxX, maxY, maxZ;
@@ -160,13 +165,14 @@ public class Game3d extends Game{
 						pointBuffer.add(points.get(index-1));
 					}
 					while (pointBuffer.size()>2){
-						triangles.add(new Triangle(0, 1, 2, pointBuffer.toArray(Vec3[]::new)));
+						triangles.add(new Triangle(0, 1, 2, pointBuffer.toArray(Vec3[]::new), light));
 						pointBuffer.remove(1);
 					}
 				}
 			}
 		} catch (Exception e){
 			System.out.println(filename+" failed to load");
+			e.printStackTrace();
 			return null;
 		}
 		System.out.println(filename+" successfully loaded");

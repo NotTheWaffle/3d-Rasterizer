@@ -8,7 +8,7 @@ public class Vec3 {
 	}
 
 	public Vec3 normalize(){
-		double r = Math.sqrt(x*x + y*y+ z*z);
+		double r = Math.sqrt(x*x + y*y + z*z);
 		return new Vec3(
 			x/r,
 			y/r,
@@ -39,6 +39,12 @@ public class Vec3 {
 	}
 	public double dot(Vec3 v){
 		return x * v.x + y * v.y + z * v.z;
+	}
+	public double dist(Vec3 v){
+		double dx = x-v.x;
+		double dy = y-v.y;
+		double dz = z-v.z;
+		return Math.sqrt(dx*dx + dy*dy + dz*dz);
 	}
 	public Vec3 cross(Vec3 v){
 		return new Vec3(
