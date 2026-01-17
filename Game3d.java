@@ -33,14 +33,9 @@ public class Game3d extends Game{
 		
 		try {
 			Mesh mesh = loadMesh(fileName);
-			
 			triangles = mesh.triangles();
 			System.out.println("Estimating "+(mesh.triangles().length * 60 + mesh.points().length * 40)/(1024*1024.0)+" megabytes of memory");
-			
-
-
-			
-		} catch (Throwable _) {
+		} catch (IOException _) {
 			System.out.println("Unable to load");
 		}
 		
@@ -113,8 +108,23 @@ public class Game3d extends Game{
 			triangle.render(raster, focalLength, cx, cy, zBuffer, cam);
 		}
 		
-		g2d.drawImage(image, 0, 0, null);
+		Vec3 origin = cam.translation;
+		Vec3 vector = cam.getForwardVector().normalize();
+		
+		Vec3 intersect = null;
+		for (Triangle tri : triangles){
+			Vec3 inter = tri.getIntersection(vector, origin);
+			if (inter == null) continue;
+			if (intersect == null || origin.dist(intersect) > origin.dist(inter)){
+				intersect = inter;
+			}
+		}
 
+		if (intersect != null){
+			new Point(intersect, .05).render(raster, focalLength, cx, cy, zBuffer, cam);
+		}
+
+		g2d.drawImage(image, 0, 0, null);
 		
 		long renderTime = System.nanoTime()-renderStart;
 		g2d.drawString("Render (ms):"+renderTime/1_000_000.0,0,20);

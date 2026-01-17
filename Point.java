@@ -30,13 +30,12 @@ public class Point {
 			color.getBlue(),
 			255
 		};
-
+		double iz = 1/p.z;
 		for (int y = minY; y <= maxY; y++) {
 			for (int x = minX; x <= maxX; x++) {
 				int dx = x-screenX;
 				int dy = y-screenY;
 				if (dx * dx + dy * dy < radius * radius) {
-					double iz = p.z;
 
 					if (iz < zBuffer[x][y]) {
 						zBuffer[x][y] = iz;

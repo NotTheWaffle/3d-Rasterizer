@@ -33,7 +33,7 @@ public class Vec3 implements Serializable{
 			z - v.z
 		);
 	}
-	public Vec3 scale(double m){
+	public Vec3 mul(double m){
 		return new Vec3(
 			x * m,
 			y * m,

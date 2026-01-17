@@ -97,7 +97,6 @@ public final class Triangle implements Serializable{
 						
 						zBuffer[x][y] = iz;
 						raster.setPixel(x, y, rgb);
-						//raster.setPixel(x, y, new int[] {(int) (100/iz),(int) (100/iz),(int) (100/iz),255});
 					}
 				}
 			}
@@ -108,38 +107,40 @@ public final class Triangle implements Serializable{
 	}
 	public Vec3 getIntersection(Vec3 rayVector, Vec3 rayOrigin){
 
-		final double EPSILON = 1e-8;
+		final double EPSILON = 1e-4;
 
 		Vec3 edge1 = p2.sub(p1);
 		Vec3 edge2 = p3.sub(p1);
+		Vec3 h = rayVector.cross(edge2);
+		
 
-		Vec3 pvec = rayVector.cross(edge2);
-		double det = edge1.dot(pvec);
+		double a = edge1.dot(h);
 
-		if (Math.abs(det) < EPSILON) {
+		if (a > -EPSILON && a < EPSILON) {
 			return null;
 		}
 
-		double invDet = 1.0 / det;
+		double f = 1.0 / a;
+		Vec3 s = rayOrigin.sub(p1);
+		double u = f * s.dot(h);
 
-		Vec3 tvec = rayOrigin.sub(p1);
-		double u = tvec.dot(pvec) * invDet;
 		if (u < 0.0 || u > 1.0) {
 			return null;
 		}
 
-		Vec3 qvec = tvec.cross(edge1);
-		double v = rayVector.dot(qvec) * invDet;
+		Vec3 q = s.cross(edge1);
+		double v = f * rayVector.dot(q);
+
 		if (v < 0.0 || u + v > 1.0) {
 			return null;
 		}
 
-		double t = edge2.dot(qvec) * invDet;
-		if (t < 0.0) {
+		double t = f * edge2.dot(q);
+		if (t < EPSILON) {
+			return rayVector.mul(t).add(rayOrigin);
+		} else {
 			return null;
 		}
-
-		return rayOrigin.add(rayVector.scale(t));
 	}
 	@Override
 	public int hashCode(){
