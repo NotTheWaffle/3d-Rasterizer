@@ -20,6 +20,17 @@ public class Mat3 {
 		for (int i = 0; i < 9; i+=4) r.m[i] = 1;
 		return r;
 	}
+	public Mat3 multiply(Mat3 mat3){
+		Mat3 r = new Mat3();
+		for (int row = 0; row < 9; row+=3) {
+			for (int col = 0; col < 3; col++) {
+				for (int k = 0; k < 3; k++) {
+					r.m[row+col] += this.m[row+k] * mat3.m[k*3+col];
+				}
+			}
+		}
+		return r;
+	}
 	public static Mat3 multiply(Mat3 a, Mat3 b) {
 		Mat3 r = new Mat3();
 		for (int row = 0; row < 9; row+=3) {

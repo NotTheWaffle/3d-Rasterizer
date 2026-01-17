@@ -41,7 +41,6 @@ public class Point {
 					if (iz < zBuffer[x][y]) {
 						zBuffer[x][y] = iz;
 						raster.setPixel(x, y, rgb);
-						//raster.setPixel(x, y, new int[] {(int) (100/iz),(int) (100/iz),(int) (100/iz), 255});
 					}
 				}
 			}

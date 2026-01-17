@@ -17,17 +17,20 @@ public class Transform {
 		translated = inv.transform(translated);
 		return translated;
 	}
+	public double distanceTo(Vec3 point){
+		return translation.dist(point);
+	}
 	public void rotateX(double pitch){
-		inv = Mat3.multiply(rotationX(pitch), inv);
-		rot = inv.transpose();
+		rot = Mat3.multiply(rot, rotationX(-pitch));
+		inv = rot.transpose();
 	}
 	public void rotateY(double yaw){
-		inv = Mat3.multiply(rotationY(yaw), inv);
-		rot = inv.transpose();
+		rot = Mat3.multiply(rot, rotationY(-yaw));
+		inv = rot.transpose();
 	}
 	public void rotateZ(double roll){
-		inv = Mat3.multiply(rotationZ(roll), inv);
-		rot = inv.transpose();
+		rot = Mat3.multiply(rot, rotationZ(-roll));
+		inv = rot.transpose();
 	}
 	public void translate(double x, double y, double z){
 		Vec3 fixed = rot.transform(new Vec3(x, y, z));

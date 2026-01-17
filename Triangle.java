@@ -1,35 +1,39 @@
 
 import java.awt.Color;
+import java.io.Serializable;
 
-public final class Triangle {
+public final class Triangle implements Serializable{
 	public final Vec3 p1;
 	public final Vec3 p2;
 	public final Vec3 p3;
-	public Color color;
-	public final Color trueColor;
-
+	private transient final Vec3 normal;
+	public transient final Color underlyingColor;
+	public transient Color color;
+	
 	public Triangle(Vec3 p1, Vec3 p2, Vec3 p3){
 		this.p1 = p1;
 		this.p2 = p2;
 		this.p3 = p3;
-		this.trueColor = new Color((int)(Math.random()*16777216));
-		recolor(new Vec3(0, 1, 0));
+		this.normal = normal();
+		this.underlyingColor = Color.white;
+		recolor(new Vec3(0, 1, 0).normalize());
+	}
+	public Triangle(int i1, int i2, int i3, Vec3[] points){
+		this(points[i1], points[i2], points[i3]);
+	}
+	public double avgZ(Transform cam){
+		
+		double avg = (cam.distanceTo(p1) + cam.distanceTo(p2) + cam.distanceTo(p3))/3;
+		return avg;
 	}
 	public void recolor(Vec3 light){
-		double coeff = light.dot(normal());
-		if (coeff < 0.3) coeff = .3;
+		double coeff = light.dot(normal);
+		if (coeff < 0.2) coeff = 0.2;
 		this.color = new Color(
-			(int) (trueColor.getRed() * coeff),
-			(int) (trueColor.getGreen() * coeff),
-			(int) (trueColor.getBlue() * coeff)
+			(int) (underlyingColor.getRed() * coeff),
+			(int) (underlyingColor.getGreen() * coeff),
+			(int) (underlyingColor.getBlue() * coeff)
 		);
-	}
-	public Triangle(int i1, int i2, int i3, Vec3[] points, Vec3 light){
-		this.p1 = points[i1];
-		this.p2 = points[i2];
-		this.p3 = points[i3];
-		trueColor = new Color((int)(Math.random()*16777216));
-		recolor(light);
 	}
 	public Vec3 normal() {
 		Vec3 edge1 = p2.sub(p1);
